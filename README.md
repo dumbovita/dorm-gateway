@@ -20,6 +20,11 @@ chmod +x dorm-gateway
 sudo mv dorm-gateway /usr/local/bin/
 ```
 
+> **macOS Note:** If blocked by Gatekeeper (*"Apple could not verify..."*), approve it under **System Settings > Privacy & Security** ("Allow Anyway") or remove the quarantine attribute:
+> ```bash
+> xattr -d com.apple.quarantine /usr/local/bin/dorm-gateway
+> ```
+
 ### Build from Source
 Requires [Go 1.22+](https://go.dev/):
 

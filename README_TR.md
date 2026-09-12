@@ -20,6 +20,11 @@ chmod +x dorm-gateway
 sudo mv dorm-gateway /usr/local/bin/
 ```
 
+> **macOS Notu:** Gatekeeper engeliyle karşılaşırsanız (*"Apple kötü amaçlı yazılım..."*), **Sistem Ayarları > Gizlilik ve Güvenlik** bölümünden ("Yine de İzin Ver") onaylayabilir veya karantina özniteliğini kaldırabilirsiniz:
+> ```bash
+> xattr -d com.apple.quarantine /usr/local/bin/dorm-gateway
+> ```
+
 ### Kaynak Koddan Derleme
 [Go 1.22+](https://go.dev/) gerektirir:
 
