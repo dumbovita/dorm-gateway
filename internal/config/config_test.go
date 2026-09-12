@@ -132,8 +132,19 @@ func TestCustomPathErrorWhenMissing(t *testing.T) {
 }
 
 func TestDefaultConfigMissingNotError(t *testing.T) {
-	// Point HOME to empty temp dir so default config does not exist
-	t.Setenv("HOME", t.TempDir())
+	tempDir := t.TempDir()
+	t.Setenv("HOME", tempDir)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+	t.Setenv("DORM_GATEWAY_USERNAME", "")
+	t.Setenv("GSBWIFI_USERNAME", "")
+	t.Setenv("GSB_USERNAME", "")
+	t.Setenv("DORM_GATEWAY_PASSWORD", "")
+	t.Setenv("GSBWIFI_PASSWORD", "")
+	t.Setenv("GSB_PASSWORD", "")
+	t.Setenv("DORM_GATEWAY_WARP_PROTOCOL", "")
+	t.Setenv("GSBWIFI_WARP_PROTOCOL", "")
+	t.Setenv("GSB_WARP_PROTOCOL", "")
+
 	cfg, _, err := Load("")
 	if err != nil {
 		t.Fatalf("expected no error when default config does not exist, got: %v", err)

@@ -13,6 +13,13 @@ import (
 )
 
 func TestRunDiagnostics(t *testing.T) {
+	t.Setenv("DORM_GATEWAY_USERNAME", "")
+	t.Setenv("GSBWIFI_USERNAME", "")
+	t.Setenv("GSB_USERNAME", "")
+	t.Setenv("DORM_GATEWAY_PASSWORD", "")
+	t.Setenv("GSBWIFI_PASSWORD", "")
+	t.Setenv("GSB_PASSWORD", "")
+
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.json")
 

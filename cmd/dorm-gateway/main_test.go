@@ -17,8 +17,14 @@ func TestCLIVersion(t *testing.T) {
 
 func TestRunConfigSubcommands(t *testing.T) {
 	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.json")
 	t.Setenv("HOME", tempDir)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+	t.Setenv("DORM_GATEWAY_USERNAME", "")
+	t.Setenv("GSBWIFI_USERNAME", "")
+	t.Setenv("GSB_USERNAME", "")
+	t.Setenv("DORM_GATEWAY_PASSWORD", "")
+	t.Setenv("GSBWIFI_PASSWORD", "")
+	t.Setenv("GSB_PASSWORD", "")
 
 	// Set credentials via config set flags
 	setArgs := []string{"set", "-username", "12345678901", "-password", "mypassword", "-protocol", "masque"}
@@ -38,11 +44,19 @@ func TestRunConfigSubcommands(t *testing.T) {
 	if exitCode != ExitSuccess {
 		t.Fatalf("config path returned exit code %d", exitCode)
 	}
-
-	_ = configPath
 }
 
 func TestRunDoctor(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("HOME", tempDir)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+	t.Setenv("DORM_GATEWAY_USERNAME", "")
+	t.Setenv("GSBWIFI_USERNAME", "")
+	t.Setenv("GSB_USERNAME", "")
+	t.Setenv("DORM_GATEWAY_PASSWORD", "")
+	t.Setenv("GSBWIFI_PASSWORD", "")
+	t.Setenv("GSB_PASSWORD", "")
+
 	ctx := context.Background()
 	exitCode := runDoctor(ctx, nil)
 	if exitCode != ExitSuccess {
@@ -52,6 +66,15 @@ func TestRunDoctor(t *testing.T) {
 
 func TestRunAuthMissingCredsNonInteractive(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Setenv("HOME", tempDir)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+	t.Setenv("DORM_GATEWAY_USERNAME", "")
+	t.Setenv("GSBWIFI_USERNAME", "")
+	t.Setenv("GSB_USERNAME", "")
+	t.Setenv("DORM_GATEWAY_PASSWORD", "")
+	t.Setenv("GSBWIFI_PASSWORD", "")
+	t.Setenv("GSB_PASSWORD", "")
+
 	configPath := filepath.Join(tempDir, "empty_config.json")
 	_ = os.WriteFile(configPath, []byte(`{}`), 0600)
 
