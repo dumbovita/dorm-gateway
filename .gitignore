@@ -1,0 +1,15 @@
+# Binaries
+bin/
+dist/
+/dorm-gateway
+/dorm-gateway-*
+
+# Test artifacts & coverage
+*.out
+*.test
+
+# Local credentials & configuration
+config.json
+
+# OS files
+.DS_Store
