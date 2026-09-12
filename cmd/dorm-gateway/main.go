@@ -56,7 +56,7 @@ func main() {
 		exitCode = runConfig(args)
 	case "doctor":
 		exitCode = runDoctor(ctx, args)
-	case "version", "-V", "--version":
+	case "version", "-v", "-V", "-version", "--version":
 		fmt.Printf("dorm-gateway version %s\n", Version)
 		os.Exit(ExitSuccess)
 	case "help", "-h", "--help":

@@ -3,11 +3,22 @@ name: CI
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (optional, e.g. v2.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
-  test-and-build:
+  test:
+    name: Test & Verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -27,5 +38,64 @@ jobs:
       - name: Run Tests with Race Detector
         run: go test -v -race ./...
 
-      - name: Cross-Compile All Platforms
-        run: make build-all
+  release:
+    name: Build & Publish Release
+    needs: test
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Determine Release Tag
+        id: tag
+        run: |
+          if [ -n "${{ inputs.tag_name }}" ]; then
+            TAG="${{ inputs.tag_name }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            VERSION=$(go run ./cmd/dorm-gateway version | awk '{print $NF}')
+            TAG="v${VERSION}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Building release for tag: ${TAG}"
+
+      - name: Build Binaries
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          mkdir -p dist
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/dorm-gateway-${TAG}-darwin-amd64 ./cmd/dorm-gateway
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/dorm-gateway-${TAG}-darwin-arm64 ./cmd/dorm-gateway
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/dorm-gateway-${TAG}-linux-amd64 ./cmd/dorm-gateway
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/dorm-gateway-${TAG}-linux-arm64 ./cmd/dorm-gateway
+          cd dist
+          sha256sum dorm-gateway-* > checksums.txt
+
+      - name: Upload Workflow Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dorm-gateway-binaries
+          path: |
+            dist/dorm-gateway-*
+            dist/checksums.txt
+          retention-days: 90
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: dorm-gateway ${{ steps.tag.outputs.tag }}
+          files: |
+            dist/dorm-gateway-*
+            dist/checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
