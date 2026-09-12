@@ -30,8 +30,18 @@ const (
 )
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		cancel()
+		restoreTerminal()
+		fmt.Fprintln(os.Stderr)
+		os.Exit(130)
+	}()
 
 	if len(os.Args) < 2 {
 		printUsage()
@@ -439,6 +449,14 @@ func isTerminal(f *os.File) bool {
 	return (stat.Mode() & os.ModeCharDevice) != 0
 }
 
+func restoreTerminal() {
+	if isTerminal(os.Stdin) {
+		cmd := exec.Command("stty", "echo")
+		cmd.Stdin = os.Stdin
+		_ = cmd.Run()
+	}
+}
+
 func readPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
 	if !isTerminal(os.Stdin) {
@@ -451,33 +469,12 @@ func readPassword(prompt string) (string, error) {
 	cmd := exec.Command("stty", "-echo")
 	cmd.Stdin = os.Stdin
 	_ = cmd.Run()
-
-	done := make(chan struct{})
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	restore := func() {
-		restoreCmd := exec.Command("stty", "echo")
-		restoreCmd.Stdin = os.Stdin
-		_ = restoreCmd.Run()
+	defer func() {
+		restoreTerminal()
 		fmt.Fprintln(os.Stderr)
-	}
-
-	go func() {
-		select {
-		case <-sigChan:
-			restore()
-			os.Exit(130)
-		case <-done:
-		}
 	}()
 
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
-
-	close(done)
-	signal.Stop(sigChan)
-	restore()
-
 	return strings.TrimSpace(line), err
 }

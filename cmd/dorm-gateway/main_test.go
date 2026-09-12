@@ -114,3 +114,8 @@ func TestPrintUsage(t *testing.T) {
 		t.Errorf("usage output missing expected command syntax")
 	}
 }
+
+func TestRestoreTerminal(t *testing.T) {
+	// Calling restoreTerminal should not panic
+	restoreTerminal()
+}
