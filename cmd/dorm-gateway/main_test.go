@@ -10,8 +10,8 @@ import (
 )
 
 func TestCLIVersion(t *testing.T) {
-	if Version != "2.0.0" {
-		t.Errorf("expected version 2.0.0, got %s", Version)
+	if Version != "2.1.0" {
+		t.Errorf("expected version 2.1.0, got %s", Version)
 	}
 }
 
@@ -118,4 +118,28 @@ func TestPrintUsage(t *testing.T) {
 func TestRestoreTerminal(t *testing.T) {
 	// Calling restoreTerminal should not panic
 	restoreTerminal()
+}
+
+func TestRunWarpNotInstalledNonInteractive(t *testing.T) {
+	// Ensure PATH has no warp-cli
+	t.Setenv("PATH", t.TempDir())
+
+	ctx := context.Background()
+	exitCode := runWarp(ctx, []string{"status"})
+	if exitCode != ExitWarpError {
+		t.Errorf("expected exit code %d, got %d", ExitWarpError, exitCode)
+	}
+}
+
+func TestGetOrPromptWarpClientNonInteractive(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+
+	ctx := context.Background()
+	client, err := getOrPromptWarpClient(ctx)
+	if client != nil {
+		t.Errorf("expected nil client when warp-cli is not installed")
+	}
+	if err == nil {
+		t.Errorf("expected error when warp-cli is not installed")
+	}
 }

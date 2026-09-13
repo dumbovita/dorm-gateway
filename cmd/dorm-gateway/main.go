@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	Version = "2.0.0"
+	Version = "2.1.0"
 
 	ExitSuccess      = 0
 	ExitGeneralError = 1
@@ -167,9 +167,13 @@ func runAuth(ctx context.Context, args []string, forceWarp bool) int {
 			warpProto = cfg.WarpProtocol
 		}
 
-		warpClient, err := warp.NewClient()
+		warpClient, err := getOrPromptWarpClient(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nWarning: WARP requested, but warp-cli is not installed.\n%s\n", warp.InstallGuidance())
+			if errors.Is(err, warp.ErrNotInstalled) {
+				fmt.Fprintf(os.Stderr, "\nWarning: WARP requested, but warp-cli is not installed.\n%s\n", warp.InstallGuidance())
+			} else {
+				fmt.Fprintf(os.Stderr, "\nCloudflare WARP error: %v\n", err)
+			}
 			return ExitWarpError
 		}
 
@@ -202,9 +206,13 @@ func runWarp(ctx context.Context, args []string) int {
 	subcmd := args[0]
 	subargs := args[1:]
 
-	warpClient, err := warp.NewClient()
+	warpClient, err := getOrPromptWarpClient(ctx)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n\n%s\n", err, warp.InstallGuidance())
+		if errors.Is(err, warp.ErrNotInstalled) {
+			fmt.Fprintf(os.Stderr, "Error: %v\n\n%s\n", err, warp.InstallGuidance())
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		}
 		return ExitWarpError
 	}
 
@@ -477,4 +485,44 @@ func readPassword(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
 	return strings.TrimSpace(line), err
+}
+
+func getOrPromptWarpClient(ctx context.Context) (*warp.Client, error) {
+	client, err := warp.NewClient()
+	if err == nil {
+		return client, nil
+	}
+	if !errors.Is(err, warp.ErrNotInstalled) {
+		return nil, err
+	}
+
+	// Only prompt if stdin is attached to a terminal
+	if !isTerminal(os.Stdin) {
+		return nil, warp.ErrNotInstalled
+	}
+
+	fmt.Fprintln(os.Stderr, "\nCloudflare WARP (warp-cli) is not installed on your system.")
+	fmt.Fprint(os.Stderr, "Would you like to install it automatically now? [y/N]: ")
+
+	reader := bufio.NewReader(os.Stdin)
+	answer, readErr := reader.ReadString('\n')
+	if readErr != nil {
+		return nil, warp.ErrNotInstalled
+	}
+	answer = strings.TrimSpace(strings.ToLower(answer))
+	if answer != "y" && answer != "yes" && answer != "e" && answer != "evet" {
+		fmt.Fprintln(os.Stderr, "Installation skipped.")
+		return nil, warp.ErrNotInstalled
+	}
+
+	fmt.Fprintln(os.Stderr)
+	if err := warp.Install(ctx); err != nil {
+		return nil, fmt.Errorf("automatic installation failed: %w", err)
+	}
+
+	client, err = warp.NewClient()
+	if err != nil {
+		return nil, fmt.Errorf("warp-cli was installed, but detection failed: %w", err)
+	}
+	return client, nil
 }

@@ -104,7 +104,7 @@ dorm-gateway warp down
 dorm-gateway warp status
 ```
 
-Sisteminizde `warp-cli` kurulu değilse macOS ([1.1.1.1](https://1.1.1.1)) veya Linux ([pkg.cloudflareclient.com](https://pkg.cloudflareclient.com/)) için resmi paketi kurabilirsiniz.
+Sisteminizde `warp-cli` kurulu değilse `dorm-gateway up` veya `dorm-gateway warp ...` komutlarını çalıştırdığınızda araç bunu tespit eder ve otomatik kurulum için sizden onay ister. Onayladığınızda macOS'ta Homebrew (`brew`) veya resmi `.pkg`, Linux'ta ise ilgili dağıtımın resmi paket yöneticisi üzerinden kurulum otomatik olarak tamamlanır. İsterseniz macOS'ta doğrudan `brew install --cask cloudflare-warp` komutuyla da kurabilirsiniz.
 
 ---
 

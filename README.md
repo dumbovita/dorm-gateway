@@ -104,7 +104,7 @@ dorm-gateway warp down
 dorm-gateway warp status
 ```
 
-If `warp-cli` is not installed on your system, install the official package for macOS ([1.1.1.1](https://1.1.1.1)) or Linux ([pkg.cloudflareclient.com](https://pkg.cloudflareclient.com/)).
+If `warp-cli` is not installed on your system, running `dorm-gateway up` or `dorm-gateway warp ...` commands will automatically offer to install it for you. When confirmed, it installs via Homebrew (`brew`) or official `.pkg` on macOS, or the official distribution package manager on Linux. You can also manually install it on macOS via `brew install --cask cloudflare-warp`.
 
 ---
 

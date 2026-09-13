@@ -79,6 +79,22 @@ type Client struct {
 func NewClient() (*Client, error) {
 	path, err := exec.LookPath("warp-cli")
 	if err != nil {
+		if runtime.GOOS == "darwin" {
+			candidates := []string{
+				"/usr/local/bin/warp-cli",
+				"/opt/homebrew/bin/warp-cli",
+				"/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli",
+			}
+			for _, candidate := range candidates {
+				if fi, statErr := os.Stat(candidate); statErr == nil && !fi.IsDir() && (fi.Mode()&0111 != 0) {
+					path = candidate
+					err = nil
+					break
+				}
+			}
+		}
+	}
+	if err != nil {
 		return nil, ErrNotInstalled
 	}
 
@@ -439,10 +455,12 @@ func InstallGuidance() string {
 		return `Cloudflare WARP (warp-cli) is not installed or not in PATH.
 
 Official macOS Installation:
-1. Download Cloudflare WARP.pkg from:
-   https://1.1.1.1 or https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/download/
-2. Run the installer package.
-3. Verify by running 'warp-cli --version' in your terminal.`
+- Via Homebrew (Recommended):
+  brew install --cask cloudflare-warp
+
+- Direct Download (.pkg):
+  https://1.1.1.1 (Run the downloaded Cloudflare WARP.pkg installer)
+  Verify by running 'warp-cli --version' in your terminal.`
 
 	case "linux":
 		distro := detectLinuxDistro()

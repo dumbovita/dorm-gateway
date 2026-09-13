@@ -163,7 +163,7 @@ func RunDiagnostics(ctx context.Context, opts Options) *Report {
 		}
 	} else {
 		r.Recommendations = append(r.Recommendations,
-			"Cloudflare WARP (warp-cli) is not installed. To install, visit https://1.1.1.1 (macOS) or https://pkg.cloudflareclient.com/ (Linux).")
+			"Cloudflare WARP (warp-cli) is not installed. Run 'dorm-gateway up' to install it automatically, or install via Homebrew ('brew install --cask cloudflare-warp') / https://1.1.1.1.")
 	}
 
 	return r
